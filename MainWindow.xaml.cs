@@ -308,7 +308,7 @@ namespace ChannelMixMatcher
             // Convert images into arrays for faster access (hopefully)
             for(var x = 0; x < resX; x++)
             {
-                for (var y = 0; y < resX; y++)
+                for (var y = 0; y < resY; y++)
                 {
                     Color testPixel = resizedTestImage.GetPixel(x, y);
                     testImgData[x, y, R] = (float)(255*Math.Pow(((double)testPixel.R / 255d), testGamma/workGamma));
