@@ -8,7 +8,7 @@ using System.Windows;
 
 namespace ChannelMixMatcher
 {
-    class DiffMethods
+    class NormalizationMethods
     {
 
 

@@ -16,13 +16,14 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"></ColumnDefinition>
                 <ColumnDefinition Width="250"></ColumnDefinition>
-                <ColumnDefinition Width="125"></ColumnDefinition>
+                <ColumnDefinition Width="200"></ColumnDefinition>
             </Grid.ColumnDefinitions>
             <!-- Images -->
             <Grid Grid.Column="0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"></RowDefinition>
                     <RowDefinition Height="25"></RowDefinition>
+                    <RowDefinition Height="5"></RowDefinition>
                     <RowDefinition Height="*"></RowDefinition>
                     <RowDefinition Height="25"></RowDefinition>
                 </Grid.RowDefinitions>
@@ -33,8 +34,12 @@
                     <Label>Regrade</Label>
                 </DockPanel>
 
-                <Image Grid.Row="2" x:Name="ImageBottom"></Image>
-                <DockPanel Grid.Row="3">
+                <GridSplitter Grid.Row="2" Height="3" VerticalAlignment="Center" HorizontalAlignment="Stretch" ShowsPreview="False">
+                    
+                </GridSplitter>
+                
+                <Image Grid.Row="3" x:Name="ImageBottom"></Image>
+                <DockPanel Grid.Row="4">
                     <Label>Regrade</Label>
                     <Slider Minimum="0" Maximum="1" MinWidth="80" TickPlacement="BottomRight" TickFrequency="0.1" Value="1"></Slider>
                     <Label>Reference</Label>
@@ -210,18 +215,39 @@
                 <Label>Advanced settings</Label>
 
                 <Border BorderThickness="1" BorderBrush="LightGray" Margin="5"></Border>
+                <Label ToolTip="Method to use to downscale the source images to the matching resolution (full resolution would be impossibly slow)">Downscale method</Label>
                 <WrapPanel>
-                    <Label ToolTip="Method to use to downscale the source images to the matching resolution (full resolution would be impossibly slow)">Downscale method</Label>
                     <RadioButton x:Name="useNNDownscale_radio" IsChecked="True" ToolTip="Use when both images are pixel-perfectly aligned or are essentially the same image. Avoid for images sets with slight or strong distortions in relation to each other, as it will select pixels that do not match each other.">Nearest Neighbor</RadioButton>
                     <RadioButton x:Name="useDefaultDownscale_radio" ToolTip="Default downscale algorithm applied to original images. Ignores gamma and will result in some amount of color shift, however can help when the images have slight or severe geometric distortion towards each other and aren't pixel-perfectly aligned.">Default Downscaler</RadioButton>
+                    <RadioButton x:Name="useLinearGammaDownscale_radio" ToolTip="">Linear Gamma Downscale</RadioButton>
+                    <RadioButton x:Name="useRGBHistogramDownscale_radio" ToolTip="">RGB Histogram</RadioButton>
+                    <!--<Label>Histogram Reference Radius</Label><TextBox IsEnabled="{Binding ElementName=useRGBHistogramDownscale_radio,Path=IsChecked}">1</TextBox>-->
                 </WrapPanel>
 
                 <Border BorderThickness="1" BorderBrush="LightGray" Margin="5"></Border>
+                <Label>Normalization Method</Label>
                 <WrapPanel>
-                    <Label>Diff Method</Label>
-                    <RadioButton x:Name="useRelativeDiff_radio" IsChecked="True">relative</RadioButton>
-                    <RadioButton x:Name="useAbsoluteDiff_radio">absolute</RadioButton>
-                    <RadioButton x:Name="useSuperRelativeDiff_radio">super-relative</RadioButton>
+                    <RadioButton x:Name="useRelativeNormalization_radio" IsChecked="True">relative</RadioButton>
+                    <RadioButton x:Name="useAbsoluteNormalization_radio">absolute</RadioButton>
+                    <RadioButton x:Name="useSuperRelativeNormalization_radio">super-relative</RadioButton>
+                </WrapPanel>
+                <Label>Difference/distance model</Label>
+                <WrapPanel>
+                    <RadioButton x:Name="useSumDistance_radio" IsChecked="True">Sum of RGB differences</RadioButton>
+                    <RadioButton x:Name="useSquaredSumDistance_radio" ToolTip="Use in combination with the 'Mean' aggregation model to effectively get MSE over all RGB values">Sum of squared RGB differences</RadioButton>
+                    <RadioButton x:Name="useEuklidianDistance_radio">Euklidian</RadioButton>
+                    <RadioButton x:Name="useCIE76Distance_radio">CIE76</RadioButton>
+                    <RadioButton x:Name="useCMClcDistance_radio">CMC l:c</RadioButton>
+                    <RadioButton x:Name="useCIE94Distance_radio">CIE94</RadioButton>
+                    <RadioButton x:Name="useCIE2000Distance_radio">CIE2000</RadioButton>
+                </WrapPanel>
+                <Label>Difference aggregation method</Label>
+                <WrapPanel>
+                    <RadioButton x:Name="useMeanDiffAggr_radio" IsChecked="True">Mean</RadioButton>
+                    <RadioButton x:Name="useMSEDiffAggr_radio" ToolTip="Careful: If you use this together with 'Sum of squared RGB differences', you aren't getting an MSE over all channels of all pixels, but rather an MSE over the already summed square differences, e.g. if your linear RGB differences are [0 0 9] then you get 27 as a result and then this method will square it on top, resulting in 729. If you want a MSE over each individual channel of each pixel, use 'sum of squared RGB differences' with the normal 'Mean' method. Use this if you, for example, want the MSE of all CIE76 distances.">MSE</RadioButton>
+                    <RadioButton x:Name="useMedianDiffAggr_radio">Median</RadioButton>
+                    <RadioButton x:Name="usePeakDiffAggr_radio">Peak</RadioButton>
+                    <RadioButton x:Name="usePSNRDiffAggr_radio">PSNR</RadioButton>
                 </WrapPanel>
             </StackPanel>
         </Grid>
