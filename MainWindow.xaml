@@ -218,10 +218,11 @@
                 <Border BorderThickness="1" BorderBrush="LightGray" Margin="5"></Border>
                 <Label ToolTip="Method to use to downscale the source images to the matching resolution (full resolution would be impossibly slow)">Downscale method</Label>
                 <WrapPanel>
-                    <RadioButton x:Name="useNNDownscale_radio" IsChecked="True" ToolTip="Use when both images are pixel-perfectly aligned or are essentially the same image. Avoid for images sets with slight or strong distortions in relation to each other, as it will select pixels that do not match each other.">Nearest Neighbor</RadioButton>
+                    <RadioButton x:Name="useLabColorVarietyDownscale_radio" IsChecked="True" ToolTip="">Lab Color Variety</RadioButton>
+                    <RadioButton x:Name="useNNDownscale_radio" ToolTip="Use when both images are pixel-perfectly aligned or are essentially the same image. Avoid for images sets with slight or strong distortions in relation to each other, as it will select pixels that do not match each other.">Nearest Neighbor</RadioButton>
                     <RadioButton x:Name="useDefaultDownscale_radio" ToolTip="Default downscale algorithm applied to original images. Ignores gamma and will result in some amount of color shift, however can help when the images have slight or severe geometric distortion towards each other and aren't pixel-perfectly aligned.">Default Downscaler</RadioButton>
-                    <RadioButton x:Name="useLinearGammaDownscale_radio" ToolTip="">Linear Gamma Downscale</RadioButton>
-                    <RadioButton x:Name="useRGBHistogramDownscale_radio" ToolTip="">RGB Histogram</RadioButton>
+                    <RadioButton x:Name="useLinearGammaDownscale_radio" ToolTip="" IsEnabled="False">Linear Gamma Downscale</RadioButton>
+                    <RadioButton x:Name="useRGBHistogramDownscale_radio" ToolTip="" IsEnabled="False">RGB Histogram</RadioButton>
                     <!--<Label>Histogram Reference Radius</Label><TextBox IsEnabled="{Binding ElementName=useRGBHistogramDownscale_radio,Path=IsChecked}">1</TextBox>-->
                 </WrapPanel>
 
@@ -236,7 +237,7 @@
                     <RadioButton x:Name="useSuperRelativeNormalization_radio">super-relative</RadioButton>
                 </WrapPanel>
                 <Label>Difference/distance model</Label>
-                <WrapPanel>
+                <WrapPanel IsEnabled="False">
                     <RadioButton x:Name="useSumDistance_radio" IsChecked="True">Sum of RGB differences</RadioButton>
                     <RadioButton x:Name="useSquaredSumDistance_radio" ToolTip="Use in combination with the 'Mean' aggregation model to effectively get MSE over all RGB values">Sum of squared RGB differences</RadioButton>
                     <RadioButton x:Name="useEuklidianDistance_radio">Euklidian</RadioButton>
@@ -246,7 +247,7 @@
                     <RadioButton x:Name="useCIE2000Distance_radio">CIE2000</RadioButton>
                 </WrapPanel>
                 <Label>Difference aggregation method</Label>
-                <WrapPanel>
+                <WrapPanel IsEnabled="False">
                     <RadioButton x:Name="useMeanDiffAggr_radio" IsChecked="True">Mean</RadioButton>
                     <RadioButton x:Name="useMSEDiffAggr_radio" ToolTip="Careful: If you use this together with 'Sum of squared RGB differences', you aren't getting an MSE over all channels of all pixels, but rather an MSE over the already summed square differences, e.g. if your linear RGB differences are [0 0 9] then you get 27 as a result and then this method will square it on top, resulting in 729. If you want a MSE over each individual channel of each pixel, use 'sum of squared RGB differences' with the normal 'Mean' method. Use this if you, for example, want the MSE of all CIE76 distances.">MSE</RadioButton>
                     <RadioButton x:Name="useMedianDiffAggr_radio">Median</RadioButton>

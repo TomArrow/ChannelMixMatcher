@@ -31,6 +31,30 @@ namespace ChannelMixMatcher
             InitializeComponent();
             initialized = true;
             updateIter();
+
+            Experiments();
+        }
+
+        private void Experiments()
+        {
+
+            double[] Rout = new double[3] { 1,1,1};
+            double[] Rin = new double[3] {1,0.5,0.5 };
+            double[] Gin = new double[3] {0.5,1,0.5 };
+            double[] Bin = new double[3] {0.5,0.5,1 };
+            //double[] Rin = new double[3] {1,0,0 };
+            //double[] Gin = new double[3] {0,1,0 };
+            //double[] Bin = new double[3] {0,0,1 };
+
+            double[] coeffs = Helpers.findCoefficients(Rout, Rin, Gin, Bin);
+
+            double[] check = new double[3];
+            for(int i = 0; i < 3; i++)
+            {
+                check[i] = coeffs[0] * Rin[i] + coeffs[1] * Gin[i] + coeffs[2] * Bin[i];
+            }
+
+            win.MessageBox.Show(coeffs.ToString());
         }
 
         const int R = 0;
@@ -105,7 +129,11 @@ namespace ChannelMixMatcher
                 subdiv = int.Parse(Subdiv_txt.Text);
                 resX = int.Parse(MatchResX_txt.Text);
                 resY = int.Parse(MatchResY_txt.Text);
-                if (useNNDownscale_radio.IsChecked == true)
+                if (useLabColorVarietyDownscale_radio.IsChecked == true)
+                {
+                    downscaleMethod = DOWNSCALE.LABCOLORVARIETY;
+                }
+                else if (useNNDownscale_radio.IsChecked == true)
                 {
                     downscaleMethod = DOWNSCALE.NN;
                 }
@@ -281,7 +309,7 @@ namespace ChannelMixMatcher
             return result;
         }
 
-        private enum DOWNSCALE { DEFAULT,NN}
+        private enum DOWNSCALE { DEFAULT,NN,LABCOLORVARIETY}
 
         // The actual colormatching.
         private void DoColorMatch_Worker(IProgress<MatchReport> progress, float rangeMin, float rangeMax, float sliderRangeMin, float sliderRangeMax, float precision, float workGamma, float testGamma, float refGamma, int subdiv, int resX, int resY, Bitmap testImage, Bitmap referenceImage, DOWNSCALE downscaleMethod, NormalizationMethods.Method normalizationMethod)
@@ -298,6 +326,11 @@ namespace ChannelMixMatcher
             Bitmap resizedTestImage, resizedReferenceImage;
             switch(downscaleMethod)
             {
+                case DOWNSCALE.LABCOLORVARIETY:
+
+                    resizedTestImage = Helpers.ResizeBitmapNN(testImage, resX, resY);
+                    resizedReferenceImage = Helpers.ResizeBitmapNN(referenceImage, resX, resY);
+                    break;
                 case DOWNSCALE.NN:
                     resizedTestImage = Helpers.ResizeBitmapNN(testImage, resX, resY);
                     resizedReferenceImage = Helpers.ResizeBitmapNN(referenceImage, resX, resY);
