@@ -25,9 +25,11 @@ namespace ChannelMixMatcher
     /// </summary>
     public partial class MainWindow : win.Window
     {
+        bool initialized = false;
         public MainWindow()
         {
             InitializeComponent();
+            initialized = true;
             updateIter();
         }
 
@@ -225,6 +227,11 @@ namespace ChannelMixMatcher
                 return;
             }
 
+            if(testImage == null)
+            {
+                // Can't regrade an image that isn't loaded!
+                return;
+            }
             try
             {
                 Bitmap tmp = new Bitmap(testImage);
@@ -516,6 +523,11 @@ namespace ChannelMixMatcher
 
         private void updateIter()
         {
+            if (!initialized)
+            {
+                return; 
+            }
+
             try
             {
                 int resX = int.Parse(MatchResX_txt.Text);
@@ -594,6 +606,42 @@ namespace ChannelMixMatcher
             };
         }
 
+        private float[,] matrixInvert(float[,] matrix) {
+
+
+            double[] result = matrixInvert(new double[9] { matrix[0,0], matrix[0, 1], matrix[0, 2], matrix[1, 0], matrix[1, 1], matrix[1, 2], matrix[2, 0], matrix[2, 1], matrix[2, 2] });
+
+
+            float[,] retVal = new float[3, 3] { { (float)result[0], (float)result[1], (float)result[2] },{ (float)result[3] , (float)result[4] , (float)result[5] },{ (float)result[6] , (float)result[7] , (float)result[8] } };
+
+            return retVal;
+        }
+        private double[] matrixInvert(double[] matrix)
+        {
+            double[][] twoDimMatrix = new double[3][];
+            twoDimMatrix[0] = new double[3] { matrix[0], matrix[1], matrix[2] };
+            twoDimMatrix[1] = new double[3] { matrix[3], matrix[4], matrix[5] };
+            twoDimMatrix[2] = new double[3] { matrix[6], matrix[7], matrix[8] };
+            double[][] invertedMatrix;
+            try
+            {
+
+                invertedMatrix = MatrixOps.MatrixInverse(twoDimMatrix);
+            }
+            catch (Exception e)
+            {
+                // Inversion not possible (not all values filled correctly yet?)
+
+                invertedMatrix = MatrixOps.MatrixCreate(3, 3);
+            }
+
+            return new double[9] {
+                invertedMatrix[0][0],invertedMatrix[0][1],invertedMatrix[0][2],
+                invertedMatrix[1][0],invertedMatrix[1][1],invertedMatrix[1][2],
+                invertedMatrix[2][0],invertedMatrix[2][1],invertedMatrix[2][2]
+            };
+        }
+
 
         // TODO Add automatic scaling if the user wants it.
         private void BtnSaveCHA_Click(object sender, win.RoutedEventArgs e)
@@ -601,31 +649,61 @@ namespace ChannelMixMatcher
             SaveFileDialog sfd = new SaveFileDialog();
             sfd.Filter = "Photoshop RGB Channel Mixer Preset (.cha)|*.cha";
 
+            string proposedFileName = "matrix";
+
             float[,] sliderMatrix = slidersToMatrix();
 
+            bool normalizationNeeded = false;
+            double normalizationMaxValue = 2;
 
             // Check if any values are outside Photoshops -2 to 2 scope. (PS won't read a file if it's outside the scope)
-            for(int i = 0; i<3; i++)
+            for (int i = 0; i<3; i++)
             {
                 for(int ii = 0; ii < 3; ii++)
                 {
                     if (sliderMatrix[i,ii] < -2 || sliderMatrix[i, ii]  > 2)
                     {
-                        if (win.MessageBox.Show("Photoshop's Channel Mixer only supports values between -2 and 2 (-200% to 200%). Your current settings exceed those values. If you continue, those values will be clipped. Continue?","Attention!", win.MessageBoxButton.YesNo) != win.MessageBoxResult.Yes)
+                        normalizationNeeded = true;
+                        if (Math.Abs(sliderMatrix[i, ii]) > normalizationMaxValue)
+                        {
+                            normalizationMaxValue = Math.Abs(sliderMatrix[i, ii]);
+                        }
+                        /*if (win.MessageBox.Show("Photoshop's Channel Mixer only supports values between -2 and 2 (-200% to 200%). Your current settings exceed those values. If you continue, those values will be clipped. Continue?","Attention!", win.MessageBoxButton.YesNo) != win.MessageBoxResult.Yes)
                         {
                             return;
                         } else
                         {
                             // Do clip the values, go!
                             goto FuckBeingElegant; // I didn't want to do this, C#, but you leave me no other choice. In PHP I could have written break 2;
-                        }
+                        }*/
                     }
                 }
             }
 
+            //FuckBeingElegant:
 
-            FuckBeingElegant:
+            double multiplier = 100;
 
+            if (normalizationNeeded)
+            {
+                win.MessageBoxResult wish = win.MessageBox.Show("The values of this matrix unfortunately exceed the -200% to 200% limit of the CHA file format. Do you wish to normalize the values? If you hit 'No', values will be clipped instead (not recommended), which will throw off color balance. Normalizing will only affect brightness.", "Decision needed", win.MessageBoxButton.YesNoCancel);
+                if (wish == win.MessageBoxResult.Yes)
+                {
+                    multiplier = 100.0 * 2.0 / normalizationMaxValue;
+                    proposedFileName += "_normalized";
+                }
+                else if (wish == win.MessageBoxResult.No)
+                {
+
+                    proposedFileName += "_clipped";
+                }
+                else
+                {
+                    return; // Cancel.
+                }
+            }
+
+            sfd.FileName = proposedFileName + ".cha";
             //sfd.FileName = ;
             if (sfd.ShowDialog() == true)
             {
@@ -638,19 +716,19 @@ namespace ChannelMixMatcher
 
                         binWriter.Write((short)1);//Version
                         binWriter.Write((short)0);//Monochrome
-                        binWriter.Write((short)Math.Max(-200, Math.Min(200,sliderMatrix[0,0]*100)));
-                        binWriter.Write((short)Math.Max(-200, Math.Min(200, sliderMatrix[0,1]*100)));
-                        binWriter.Write((short)Math.Max(-200, Math.Min(200, sliderMatrix[0,2]*100)));
+                        binWriter.Write((short)Math.Max(-200, Math.Min(200,sliderMatrix[0,0]* multiplier)));
+                        binWriter.Write((short)Math.Max(-200, Math.Min(200, sliderMatrix[0,1]* multiplier)));
+                        binWriter.Write((short)Math.Max(-200, Math.Min(200, sliderMatrix[0,2]* multiplier)));
                         binWriter.Write((short)0); //Useless (CMYK?)
                         binWriter.Write((short)0); //Constant
-                        binWriter.Write((short)Math.Max(-200, Math.Min(200, sliderMatrix[1, 0] * 100)));
-                        binWriter.Write((short)Math.Max(-200, Math.Min(200, sliderMatrix[1, 1] * 100)));
-                        binWriter.Write((short)Math.Max(-200, Math.Min(200, sliderMatrix[1, 2] * 100)));
+                        binWriter.Write((short)Math.Max(-200, Math.Min(200, sliderMatrix[1, 0] * multiplier)));
+                        binWriter.Write((short)Math.Max(-200, Math.Min(200, sliderMatrix[1, 1] * multiplier)));
+                        binWriter.Write((short)Math.Max(-200, Math.Min(200, sliderMatrix[1, 2] * multiplier)));
                         binWriter.Write((short)0); //Useless (CMYK?)
                         binWriter.Write((short)0); //Constant
-                        binWriter.Write((short)Math.Max(-200, Math.Min(200, sliderMatrix[2, 0] * 100)));
-                        binWriter.Write((short)Math.Max(-200, Math.Min(200, sliderMatrix[2, 1] * 100)));
-                        binWriter.Write((short)Math.Max(-200, Math.Min(200, sliderMatrix[2, 2] * 100)));
+                        binWriter.Write((short)Math.Max(-200, Math.Min(200, sliderMatrix[2, 0] * multiplier)));
+                        binWriter.Write((short)Math.Max(-200, Math.Min(200, sliderMatrix[2, 1] * multiplier)));
+                        binWriter.Write((short)Math.Max(-200, Math.Min(200, sliderMatrix[2, 2] * multiplier)));
                         binWriter.Write((short)0); //Useless (CMYK?)
                         binWriter.Write((short)0); //Constant
 
@@ -667,6 +745,15 @@ namespace ChannelMixMatcher
                 setStatus("Slider values were written into " + filename + ": " + Helpers.matrixToString<float>(sliderMatrix));
             }
 
+        }
+
+        private void btnMatrixInvert_Click(object sender, win.RoutedEventArgs e)
+        {
+            float[,] sliderMatrix = slidersToMatrix();
+
+            sliderMatrix = matrixInvert(sliderMatrix);
+
+            SetSlidersToMatrix(sliderMatrix);
         }
     }
 }

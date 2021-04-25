@@ -169,7 +169,8 @@
                             <TextBox DockPanel.Dock="Right" Text="{Binding ElementName=slide_multiplier, Path=Value, Mode=TwoWay}" Width="30" TextAlignment="Right"></TextBox>
                             <Slider Name="slide_multiplier" Value="1" Maximum="5" Minimum="0" TickPlacement="BottomRight" TickFrequency="0.5" SmallChange="0.01" LargeChange="0.1"></Slider>
                         </DockPanel>
-                        <Button>Auto-multiplier (avoid clipping)</Button>
+                        <Button IsEnabled="False">Auto-multiplier (avoid clipping)</Button>
+                        <Button x:Name="btnMatrixInvert" Click="btnMatrixInvert_Click">Invert Matrix</Button>
                         <Button x:Name="btnSaveCHA" Click="BtnSaveCHA_Click">Export Channel Mixer Photoshop Preset</Button>
                         <DockPanel>
                             <Button>Export 3D LUT (.cube)</Button>
@@ -223,6 +224,9 @@
                     <RadioButton x:Name="useRGBHistogramDownscale_radio" ToolTip="">RGB Histogram</RadioButton>
                     <!--<Label>Histogram Reference Radius</Label><TextBox IsEnabled="{Binding ElementName=useRGBHistogramDownscale_radio,Path=IsChecked}">1</TextBox>-->
                 </WrapPanel>
+
+                <Image x:Name="downscaledTestImage"></Image>
+                <Image x:Name="downscaledReferenceImage"></Image>
 
                 <Border BorderThickness="1" BorderBrush="LightGray" Margin="5"></Border>
                 <Label>Normalization Method</Label>
