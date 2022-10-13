@@ -17,6 +17,7 @@ using System.Windows.Shapes;
 using Microsoft.Win32;
 using System.Threading;
 using Be.IO;
+using System.Diagnostics;
 
 namespace ChannelMixMatcher
 {
@@ -38,7 +39,21 @@ namespace ChannelMixMatcher
         private void Experiments()
         {
 
-            double[] Rout = new double[3] { 1,1,1};
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+
+            int pixelCount = 50000;
+            for(int i = 0; i < pixelCount; i++)
+            {
+                for (int ii = 0; ii < pixelCount; ii++)
+                {
+
+                }
+            }
+
+            sw.Stop();
+            win.MessageBox.Show((sw.ElapsedMilliseconds/1000).ToString());
+            /*double[] Rout = new double[3] { 1,1,1};
             double[] Rin = new double[3] {1,0.5,0.5 };
             double[] Gin = new double[3] {0.5,1,0.5 };
             double[] Bin = new double[3] {0.5,0.5,1 };
@@ -54,7 +69,7 @@ namespace ChannelMixMatcher
                 check[i] = coeffs[0] * Rin[i] + coeffs[1] * Gin[i] + coeffs[2] * Bin[i];
             }
 
-            win.MessageBox.Show(coeffs.ToString());
+            win.MessageBox.Show(coeffs.ToString());*/
         }
 
         const int R = 0;
